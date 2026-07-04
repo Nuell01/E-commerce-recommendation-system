@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Recommendation Engine — Executive Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0E1A2B;
+    --panel:#142640;
+    --panel-2:#0F2038;
+    --paper:#F3EFE6;
+    --gold:#E0A340;
+    --teal:#4FB6A8;
+    --rose:#D97757;
+    --line:#f3efe61f;
+    --muted:#9FB0C7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--ink); color:var(--paper);
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px 80px;}
+  header.top{
+    padding:46px 28px 30px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, var(--panel-2), var(--ink));
+  }
+  header.top .inner{max-width:1180px; margin:0 auto;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em;
+    color:var(--gold); text-transform:uppercase; margin-bottom:14px;
+  }
+  h1{
+    font-family:'Fraunces',serif; font-weight:600; font-size:40px; line-height:1.08;
+    margin:0 0 10px; max-width:760px;
+  }
+  .sub{color:var(--muted); font-size:15.5px; max-width:660px; line-height:1.55;}
+  .receipt{
+    display:flex; gap:0; margin-top:34px; border-top:1px dashed var(--line);
+    border-bottom:1px dashed var(--line); overflow-x:auto;
+  }
+  .receipt .kpi{
+    flex:1; min-width:140px; padding:18px 20px; border-right:1px dashed var(--line);
+  }
+  .receipt .kpi:last-child{border-right:none;}
+  .kpi .label{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase;}
+  .kpi .value{font-family:'JetBrains Mono',monospace; font-size:25px; font-weight:700; color:var(--paper); margin-top:6px;}
+  .kpi .value.gold{color:var(--gold);}
+  .kpi .value.teal{color:var(--teal);}
+
+  section{padding:56px 0 0;}
+  section .head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:10px;}
+  h2{font-family:'Fraunces',serif; font-weight:600; font-size:24px; margin:0;}
+  .tag{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.05em;}
+  p.lede{color:var(--muted); font-size:14.5px; max-width:680px; line-height:1.6; margin:-10px 0 24px;}
+
+  .grid2{display:grid; grid-template-columns:1.3fr 1fr; gap:22px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  @media (max-width:880px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:22px;
+  }
+  .card h3{font-family:'Inter',sans-serif; font-weight:600; font-size:14.5px; margin:0 0 16px; color:var(--paper);}
+  .card h3 .n{color:var(--muted); font-weight:400;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{
+    text-align:left; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--muted); padding:8px 6px; border-bottom:1px solid var(--line);
+  }
+  td{padding:9px 6px; border-bottom:1px solid var(--line); color:var(--paper);}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right; font-family:'JetBrains Mono',monospace;}
+
+  .pill{display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-family:'JetBrains Mono',monospace;}
+  .pill.win{background:rgba(224,163,64,0.18); color:var(--gold); border:1px solid rgba(224,163,64,.4);}
+  .pill.seg{background:rgba(79,182,168,0.15); color:var(--teal); border:1px solid rgba(79,182,168,.35);}
+
+  .pair-row{
+    display:flex; align-items:center; justify-content:space-between; padding:10px 0;
+    border-bottom:1px solid var(--line); font-size:13.5px;
+  }
+  .pair-row:last-child{border-bottom:none;}
+  .pair-row .names{color:var(--paper);}
+  .pair-row .names b{color:var(--gold); font-weight:600;}
+  .pair-row .cnt{font-family:'JetBrains Mono',monospace; color:var(--muted); font-size:12px;}
+
+  .customer-card{border:1px solid var(--line); border-radius:4px; padding:16px 18px; background:var(--panel-2);}
+  .customer-card .cid{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);}
+  .customer-card .meta{font-size:12.5px; color:var(--muted); margin:4px 0 12px;}
+  .customer-card ol{margin:0; padding-left:18px; font-size:13px; line-height:1.7;}
+  .customer-card ol li::marker{color:var(--gold); font-family:'JetBrains Mono',monospace; font-size:11px;}
+
+  .chartbox{position:relative; height:260px;}
+  .chartbox.tall{height:300px;}
+  footer{
+    margin-top:60px; padding-top:24px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:12.5px; line-height:1.7;
+  }
+  footer b{color:var(--paper);}
+  .legend-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); margin-top:10px;}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="inner">
+  <div class="eyebrow">Recommendation Engine · Executive View</div>
+  <h1>Personalized recommendations lifted hit rate from 24% to 36% over the best-seller list.</h1>
+  <p class="sub">Built on 13 months of transaction history. This view summarizes customer behavior, the recommendation models tested, and where the winning model performs best — and worst.</p>
+  <div class="receipt" id="kpiRow"></div>
+</div></header>
+
+<div class="wrap">
+
+  <section>
+    <div class="head"><h2>Revenue &amp; order trend</h2><span class="tag">Dec 2010 – Dec 2011 · monthly</span></div>
+    <p class="lede">Revenue climbs steadily into a sharp Sep–Nov peak (Christmas wholesale ordering), then drops in December as the dataset's final month is only partially captured.</p>
+    <div class="card"><div class="chartbox tall"><canvas id="monthlyChart"></canvas></div></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Customer segments (RFM)</h2><span class="tag">Recency · Frequency · Monetary</span></div>
+    <p class="lede">Customers are scored on how recently, how often, and how much they buy, then grouped into six segments business teams can act on directly.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3>Customers &amp; revenue by segment</h3>
+        <div class="chartbox"><canvas id="segChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Segment definitions</h3>
+        <table>
+          <tr><td><span class="pill seg">Champions</span></td><td>Bought recently, often, big spend</td></tr>
+          <tr><td><span class="pill seg">Loyal</span></td><td>Solid recency + frequency</td></tr>
+          <tr><td><span class="pill seg">New / Promising</span></td><td>Recent but low order count yet</td></tr>
+          <tr><td><span class="pill seg">At Risk</span></td><td>Used to order a lot, gone quiet</td></tr>
+          <tr><td><span class="pill seg">Needs Attention</span></td><td>Mid-tier on all three measures</td></tr>
+          <tr><td><span class="pill seg">Hibernating</span></td><td>Low on every measure</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Top products &amp; cross-sell pairs</h2><span class="tag">Basket-level co-purchase</span></div>
+    <p class="lede">Best-sellers by revenue, alongside the product pairs most often bought in the same order — the basis for "frequently bought together" prompts.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3>Top 10 products by revenue</h3>
+        <div class="chartbox tall"><canvas id="prodChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Top cross-sell pairs</h3>
+        <div id="pairsList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Recommendation model comparison</h2><span class="tag">Top-10 lists · time-based holdout</span></div>
+    <p class="lede">Four approaches were evaluated by training on transactions before Nov 1, 2011 and testing against actual Nov–Dec purchases. The hybrid model — collaborative filtering blended with content similarity — won on every metric.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3>Precision@10 and Hit Rate@10 by model</h3>
+        <div class="chartbox tall"><canvas id="modelChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Full metric table</h3>
+        <table id="modelTable"></table>
+        <div class="legend-note">Precision@10 = share of the 10 recommended items the customer actually bought next.<br>Hit Rate@10 = share of customers with at least one correct recommendation.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Accuracy over time</h2><span class="tag">Winning model · held-out months</span></div>
+    <p class="lede">Accuracy is highest in November, close to the training window, and softens in December — a normal pattern as customer behavior drifts further from what the model last learned.</p>
+    <div class="card"><div class="chartbox"><canvas id="trendChart"></canvas></div></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Sample recommendations by segment</h2><span class="tag">Live output, hybrid model</span></div>
+    <p class="lede">One representative customer per segment, with their actual top-5 generated recommendations.</p>
+    <div class="grid3" id="customerCards"></div>
+  </section>
+
+  <footer>
+    <p><b>Methodology in one line:</b> item-based collaborative filtering (co-purchase similarity) blended 70/30 with content-based filtering (TF-IDF on product descriptions), evaluated with a time-based train/test split to avoid leaking future purchases into training.</p>
+    <p>Data: UCI Online Retail transaction export, cleaned to 391,150 valid purchase line items across 4,334 customers and 37 countries. See the accompanying report and Python scripts for full detail.</p>
+  </footer>
+</div>
+
+<script>
+const DATA = {
+"cleaning": {
+"rows_raw": 541909,
+"dropped_missing_customer_id": 135080,
+"dropped_cancelled_invoices": 8905,
+"dropped_non_positive_qty": 0,
+"dropped_non_positive_price": 40,
+"dropped_admin_stockcodes": 1547,
+"dropped_exact_duplicates": 5187,
+"dropped_unresolvable_description": 0,
+"quantity_cap_995pct": 200.0,
+"price_cap_995pct": 16.95,
+"rows_clean": 391150,
+"pct_retained": 72.2,
+"n_customers": 4334,
+"n_products": 3659,
+"n_invoices": 18402,
+"date_min": "2010-12-01 08:26:00",
+"date_max": "2011-12-09 12:50:00",
+"n_countries": 37
+},
+"model_summary": {
+"split_date": "2011-11-01",
+"train_rows": 311248,
+"test_rows": 67057,
+"best_model": "Hybrid (CF + Content)"
+},
+"monthly": [
+{"InvoiceMonth": "2010-12-01","Revenue": 521222.84,"Orders": 1394,"Customers": 884},
+{"InvoiceMonth": "2011-01-01","Revenue": 440267.32,"Orders": 983,"Customers": 739},
+{"InvoiceMonth": "2011-02-01","Revenue": 417610.16,"Orders": 992,"Customers": 757},
+{"InvoiceMonth": "2011-03-01","Revenue": 550851.48,"Orders": 1312,"Customers": 973},
+{"InvoiceMonth": "2011-04-01","Revenue": 416491.33,"Orders": 1139,"Customers": 853},
+{"InvoiceMonth": "2011-05-01","Revenue": 627143.13,"Orders": 1544,"Customers": 1054},
+{"InvoiceMonth": "2011-06-01","Revenue": 577105.85,"Orders": 1390,"Customers": 990},
+{"InvoiceMonth": "2011-07-01","Revenue": 563276.91,"Orders": 1321,"Customers": 946},
+{"InvoiceMonth": "2011-08-01","Revenue": 592245.16,"Orders": 1267,"Customers": 933},
+{"InvoiceMonth": "2011-09-01","Revenue": 859276.20,"Orders": 1739,"Customers": 1259},
+{"InvoiceMonth": "2011-10-01","Revenue": 940028.77,"Orders": 1903,"Customers": 1361},
+{"InvoiceMonth": "2011-11-01","Revenue": 1089691.56,"Orders": 2642,"Customers": 1660},
+{"InvoiceMonth": "2011-12-01","Revenue": 314847.71,"Orders": 776,"Customers": 614}
+],
+"segment_counts": {
+"Champions": 961,"Loyal Customers": 1002,"New / Promising": 319,
+"At Risk (used to buy a lot)": 273,"Needs Attention": 943,"Hibernating / Lost": 836
+},
+"segment_revenue": {
+"Champions": 5313516.0,"Loyal Customers": 1210263.0,"New / Promising": 135655.0,
+"At Risk (used to buy a lot)": 410005.0,"Needs Attention": 655986.0,"Hibernating / Lost": 184633.0
+},
+"top_products": [
+{"Description": "REGENCY CAKESTAND 3 TIER","Total_Revenue": 141356.20},
+{"Description": "WHITE HANGING HEART T-LIGHT HOLDER","Total_Revenue": 81001.18},
+{"Description": "JUMBO BAG RED RETROSPOT","Total_Revenue": 76764.24},
+{"Description": "PARTY BUNTING","Total_Revenue": 68785.23},
+{"Description": "ASSORTED COLOUR BIRD ORNAMENT","Total_Revenue": 49789.43},
+{"Description": "CHILLI LIGHTS","Total_Revenue": 42546.71},
+{"Description": "PAPER CHAIN KIT 50'S CHRISTMAS","Total_Revenue": 39034.53},
+{"Description": "SPOTTY BUNTING","Total_Revenue": 35509.55},
+{"Description": "RABBIT NIGHT LIGHT","Total_Revenue": 35243.52},
+{"Description": "JUMBO BAG PINK POLKADOT","Total_Revenue": 34488.36}
+],
+"top_pairs": [
+{"Product_A_Name": "GREEN REGENCY TEACUP AND SAUCER","Product_B_Name": "ROSES REGENCY TEACUP AND SAUCER","Times_Bought_Together": 320},
+{"Product_A_Name": "JUMBO BAG PINK POLKADOT","Product_B_Name": "JUMBO BAG RED RETROSPOT","Times_Bought_Together": 310},
+{"Product_A_Name": "ALARM CLOCK BAKELIKE GREEN","Product_B_Name": "ALARM CLOCK BAKELIKE RED","Times_Bought_Together": 284},
+{"Product_A_Name": "GREEN REGENCY TEACUP AND SAUCER","Product_B_Name": "PINK REGENCY TEACUP AND SAUCER","Times_Bought_Together": 274},
+{"Product_A_Name": "JUMBO BAG DOILEY PATTERNS","Product_B_Name": "JUMBO BAG RED RETROSPOT","Times_Bought_Together": 257},
+{"Product_A_Name": "PINK REGENCY TEACUP AND SAUCER","Product_B_Name": "ROSES REGENCY TEACUP AND SAUCER","Times_Bought_Together": 255},
+{"Product_A_Name": "WOODEN PICTURE FRAME WHITE FINISH","Product_B_Name": "WOODEN FRAME ANTIQUE WHITE","Times_Bought_Together": 243},
+{"Product_A_Name": "REGENCY CAKESTAND 3 TIER","Product_B_Name": "ROSES REGENCY TEACUP AND SAUCER","Times_Bought_Together": 243}
+],
+"model_eval": [
+{"Model": "Hybrid (CF + Content)","Precision@10": 0.0618,"Recall@10": 0.0236,"HitRate@10": 0.3604,"N_Customers_Evaluated": 1540},
+{"Model": "Item-Based Collaborative Filtering","Precision@10": 0.0527,"Recall@10": 0.0208,"HitRate@10": 0.3162,"N_Customers_Evaluated": 1540},
+{"Model": "Content-Based (TF-IDF)","Precision@10": 0.0517,"Recall@10": 0.0199,"HitRate@10": 0.3175,"N_Customers_Evaluated": 1540},
+{"Model": "Popularity Baseline","Precision@10": 0.0323,"Recall@10": 0.0117,"HitRate@10": 0.2377,"N_Customers_Evaluated": 1540}
+],
+"trend": [
+{"Month": "2011-11-01","Precision@10": 0.0591,"Recall@10": 0.0240,"HitRate@10": 0.3455,"N_Customers": 1337},
+{"Month": "2011-12-01","Precision@10": 0.0363,"Recall@10": 0.0185,"HitRate@10": 0.2402,"N_Customers": 537}
+],
+"sample_customers": [
+{"CustomerID": 16180,"Segment": "At Risk (used to buy a lot)","Country": "United Kingdom","Monetary_Total": 10254.18,"Frequency_Orders": 8,
+ "Recommendations": ["LUNCH BAG WOODLAND","JUMBO BAG OWLS","JUMBO STORAGE BAG SKULLS","JUMBO BAG 50'S CHRISTMAS","JUMBO BAG BAROQUE BLACK WHITE"]},
+{"CustomerID": 14646,"Segment": "Champions","Country": "Netherlands","Monetary_Total": 253507.24,"Frequency_Orders": 72,
+ "Recommendations": ["LUNCH BAG VINTAGE LEAF DESIGN","JUMBO BAG VINTAGE LEAF","SET OF 60 VINTAGE LEAF CAKE CASES","RETROSPOT TEA SET CERAMIC 11 PC","SET OF 6 SPICE TINS PANTRY DESIGN"]},
+{"CustomerID": 13248,"Segment": "Hibernating / Lost","Country": "United Kingdom","Monetary_Total": 465.68,"Frequency_Orders": 2,
+ "Recommendations": ["ROSES REGENCY TEACUP AND SAUCER","REGENCY TEA PLATE ROSES","REGENCY TEAPOT ROSES","REGENCY TEA PLATE PINK","REGENCY SUGAR BOWL GREEN"]},
+{"CustomerID": 16029,"Segment": "Loyal Customers","Country": "United Kingdom","Monetary_Total": 53149.53,"Frequency_Orders": 62,
+ "Recommendations": ["LUNCH BAG RED RETROSPOT","JUMBO BAG APPLES","JUMBO BAG DOILEY PATTERNS","LUNCH BAG CARS BLUE","LUNCH BAG BLACK SKULL"]},
+{"CustomerID": 12409,"Segment": "Needs Attention","Country": "Switzerland","Monetary_Total": 11072.67,"Frequency_Orders": 3,
+ "Recommendations": ["LUNCH BAG RED RETROSPOT","LUNCH BAG SPACEBOY DESIGN","SPACEBOY LUNCH BOX","LUNCH BAG DOILEY PATTERN","LUNCH BAG APPLE DESIGN"]},
+{"CustomerID": 12357,"Segment": "New / Promising","Country": "Switzerland","Monetary_Total": 6199.62,"Frequency_Orders": 1,
+ "Recommendations": ["SET OF 3 CAKE TINS PANTRY DESIGN","PACK OF 72 RETROSPOT CAKE CASES","LUNCH BAG RED RETROSPOT","SET/20 RED RETROSPOT PAPER NAPKINS","SET OF 3 REGENCY CAKE TINS"]}
+],
+"totals": {"revenue": 7910058.42,"orders": 18402,"customers": 4334,"products": 3888,"countries": 37,"avg_order_value": 429.85}
+};
+
+Chart.defaults.color = '#9FB0C7';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(243,239,230,0.08)';
+const GOLD='#E0A340', TEAL='#4FB6A8', ROSE='#D97757', PAPER='#F3EFE6';
+
+// KPI strip
+const kpis = [
+  ['Revenue analyzed', '£' + (DATA.totals.revenue/1e6).toFixed(2) + 'M', 'gold'],
+  ['Orders', DATA.totals.orders.toLocaleString(), ''],
+  ['Customers', DATA.totals.customers.toLocaleString(), ''],
+  ['Products', DATA.totals.products.toLocaleString(), ''],
+  ['Avg order value', '£' + DATA.totals.avg_order_value.toFixed(0), 'teal'],
+  ['Best model precision@10', (DATA.model_eval[0]['Precision@10']*100).toFixed(1) + '%', 'gold'],
+];
+document.getElementById('kpiRow').innerHTML = kpis.map(([l,v,c])=>`
+  <div class="kpi"><div class="label">${l}</div><div class="value ${c}">${v}</div></div>
+`).join('');
+
+// Monthly revenue chart
+new Chart(document.getElementById('monthlyChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.monthly.map(m=>m.InvoiceMonth.slice(0,7)),
+    datasets:[
+      {type:'bar', label:'Revenue (£)', data: DATA.monthly.map(m=>m.Revenue), backgroundColor:'rgba(224,163,64,0.55)', borderRadius:2, yAxisID:'y'},
+      {type:'line', label:'Orders', data: DATA.monthly.map(m=>m.Orders), borderColor:TEAL, backgroundColor:TEAL, tension:.35, yAxisID:'y1', pointRadius:3}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index', intersect:false},
+    scales:{
+      y:{position:'left', grid:{color:'rgba(243,239,230,0.06)'}, ticks:{callback:v=>'£'+(v/1000)+'k'}},
+      y1:{position:'right', grid:{display:false}},
+      x:{grid:{display:false}}
+    },
+    plugins:{legend:{labels:{boxWidth:10}}}
+  }
+});
+
+// Segment chart
+const segLabels = Object.keys(DATA.segment_counts);
+new Chart(document.getElementById('segChart'), {
+  data:{
+    labels: segLabels,
+    datasets:[
+      {type:'bar', label:'Customers', data: segLabels.map(s=>DATA.segment_counts[s]), backgroundColor:'rgba(79,182,168,0.6)', borderRadius:3, yAxisID:'y'},
+      {type:'line', label:'Revenue (£)', data: segLabels.map(s=>DATA.segment_revenue[s]), borderColor:GOLD, backgroundColor:GOLD, yAxisID:'y1', pointRadius:4, tension:0}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    scales:{
+      y:{position:'left', grid:{color:'rgba(243,239,230,0.06)'}},
+      y1:{position:'right', grid:{display:false}, ticks:{callback:v=>'£'+(v/1e6).toFixed(1)+'M'}},
+      x:{grid:{display:false}, ticks:{autoSkip:false, maxRotation:35, minRotation:35, font:{size:10.5}}}
+    },
+    plugins:{legend:{labels:{boxWidth:10}}}
+  }
+});
+
+// Top products horizontal bar
+new Chart(document.getElementById('prodChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.top_products.map(p=>p.Description.length>28? p.Description.slice(0,26)+'…':p.Description),
+    datasets:[{label:'Revenue (£)', data: DATA.top_products.map(p=>p.Total_Revenue), backgroundColor:'rgba(217,119,87,0.65)', borderRadius:3}]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    scales:{x:{grid:{color:'rgba(243,239,230,0.06)'}, ticks:{callback:v=>'£'+(v/1000)+'k'}}, y:{grid:{display:false}, ticks:{font:{size:11}}}},
+    plugins:{legend:{display:false}}
+  }
+});
+
+// Cross-sell pairs list
+document.getElementById('pairsList').innerHTML = DATA.top_pairs.map(p=>`
+  <div class="pair-row">
+    <div class="names"><b>${p.Product_A_Name}</b> + ${p.Product_B_Name}</div>
+    <div class="cnt">×${p.Times_Bought_Together}</div>
+  </div>
+`).join('');
+
+// Model comparison chart
+new Chart(document.getElementById('modelChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.model_eval.map(m=>m.Model.replace(' (CF + Content)','\n(CF+Content)')),
+    datasets:[
+      {label:'Precision@10', data: DATA.model_eval.map(m=>m['Precision@10']), backgroundColor:'rgba(224,163,64,0.75)', borderRadius:3},
+      {label:'Hit Rate@10', data: DATA.model_eval.map(m=>m['HitRate@10']), backgroundColor:'rgba(79,182,168,0.6)', borderRadius:3}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    scales:{
+      y:{grid:{color:'rgba(243,239,230,0.06)'}, ticks:{callback:v=>(v*100).toFixed(0)+'%'}},
+      x:{grid:{display:false}, ticks:{font:{size:10.5}}}
+    },
+    plugins:{legend:{labels:{boxWidth:10}}}
+  }
+});
+
+// Model table
+document.getElementById('modelTable').innerHTML = `
+  <tr><th>Model</th><th class="num">Precision@10</th><th class="num">Recall@10</th><th class="num">Hit Rate@10</th></tr>
+  ${DATA.model_eval.map((m,i)=>`
+    <tr>
+      <td>${m.Model} ${i===0?'<span class="pill win">winner</span>':''}</td>
+      <td class="num">${(m['Precision@10']*100).toFixed(1)}%</td>
+      <td class="num">${(m['Recall@10']*100).toFixed(1)}%</td>
+      <td class="num">${(m['HitRate@10']*100).toFixed(1)}%</td>
+    </tr>`).join('')}
+`;
+
+// Trend chart
+new Chart(document.getElementById('trendChart'), {
+  type:'line',
+  data:{
+    labels: DATA.trend.map(t=>t.Month.slice(0,7)),
+    datasets:[
+      {label:'Precision@10', data: DATA.trend.map(t=>t['Precision@10']), borderColor:GOLD, backgroundColor:GOLD, tension:.3, pointRadius:5},
+      {label:'Hit Rate@10', data: DATA.trend.map(t=>t['HitRate@10']), borderColor:TEAL, backgroundColor:TEAL, tension:.3, pointRadius:5}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    scales:{y:{grid:{color:'rgba(243,239,230,0.06)'}, ticks:{callback:v=>(v*100).toFixed(0)+'%'}}, x:{grid:{display:false}}},
+    plugins:{legend:{labels:{boxWidth:10}}}
+  }
+});
+
+// Customer cards
+document.getElementById('customerCards').innerHTML = DATA.sample_customers.map(c=>`
+  <div class="customer-card">
+    <span class="pill seg">${c.Segment}</span>
+    <div class="cid" style="margin-top:8px;">Customer #${c.CustomerID} · ${c.Country}</div>
+    <div class="meta">£${c.Monetary_Total.toLocaleString()} lifetime · ${c.Frequency_Orders} orders</div>
+    <ol>${c.Recommendations.map(r=>`<li>${r}</li>`).join('')}</ol>
+  </div>
+`).join('');
+</script>
+</body>
+</html>
